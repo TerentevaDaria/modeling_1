@@ -7,16 +7,16 @@
     <input id='k' type="number" value="0.5" /> Н/м
 </div>
 <div>L1 – расстояние от точки крепления маятников до пружины
-    <input id='L1' type="number" value="0.8" /> м
+    <input id='L1' type="number" value="0.5" /> м
 </div>
 <div>L – длина подвеса
     <input id='L' type="number" value="1" /> м
 </div>
 <div>m – масса маятника
-    <input id='m' type="number" value="1.5" /> кг
+    <input id='m' type="number" value="1" /> кг
 </div>
 <div>β – коэффициент затухания
-    <input id='beta' type="number" value="0.01" /> 1/с
+    <input id='beta' type="number" value="0.03" /> 1/с
 </div>
 <div>ϕ1 – начальное отклонение первого маятника
     <input id='fi0_1' type="number" value="0.785" /> рад
@@ -25,10 +25,10 @@
     <input id='fi0_2' type="number" value="0.523" /> рад
 </div>
 <div>n - количество точек
-    <input id='n' type="number" value="100000" /> 
+    <input id='n' type="number" value="300000" /> 
 </div>
 <div>h - шаг вычислений
-    <input id='h' type="number" value="0.01" />
+    <input id='h' type="number" value="0.001" />
 </div>
 
 <button id='draw1' onclick='draw()'>Построить график</button>
@@ -263,7 +263,7 @@
                 },
                 exponentformat: 'e'
             },
-            yaxis2: {
+            yaxis4: {
                 title: {
                     text: "ϕ2(t)"
                 },
@@ -287,7 +287,7 @@
                 },
                 exponentformat: 'e'
             },
-            yaxis4: {
+            yaxis2: {
                 title: {
                     text: "ω2(t)"
                 },
