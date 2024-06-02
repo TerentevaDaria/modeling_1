@@ -32,6 +32,8 @@
 </div>
 
 <button id='draw1' onclick='draw()'>Построить график</button>
+<p id="Omega1"></p>
+<p id="Omega2"></p>
 <div id="myPlot" style="height:100%;"></div>
 
 <script>
@@ -45,24 +47,14 @@
         }
     }
 
-    function A1(fi1_0, fi2_0)
-    {
-        return fi1_0 + fi2_0;
-    }
-    
-    function A2(fi1_0, fi2_0)
-    {
-        return fi1_0 - fi2_0;
-    }
-
     function angular_acceleration1(g, L, L1, m, k, fi1, fi2, beta, angular_velocity1)
     {
-        return -g * Math.sin(fi1) / L - k * L1 * L1 * (fi1 - fi2) / (m * L * L) - beta * angular_velocity1;
+        return -g * Math.sin(fi1) / L - k * L1 * L1 * (Math.sin(fi1) - Math.sin(fi2)) / (m * L * L) - beta * angular_velocity1;
     }
 
     function angular_acceleration2(g, L, L1, m, k, fi1, fi2, beta,  angular_velocity2)
     {
-        return -g * Math.sin(fi2) / L + k * L1 * L1 * (fi1 - fi2) / (m * L * L) - beta * angular_velocity2;
+        return -g * Math.sin(fi2) / L + k * L1 * L1 * (Math.sin(fi1) - Math.sin(fi2)) / (m * L * L) - beta * angular_velocity2;
     }
     
     function generate_coords(h, cnt, g, L, L1, m, k, fi0_1, fi0_2, beta)
@@ -73,15 +65,15 @@
         
         for (let i = 1; i <= cnt; ++i) {
             let curr = new Derivatives([0.0, 0.0, 0.0]);
-            // acceleration = f(angle_i-1)
             let fi1 = path1[path1.length - 1].derivatives[0];
             let fi2 = path2[path2.length - 1].derivatives[0];
             let angular_velocity1 = path1[path1.length - 1].derivatives[1];
+            // acceleration = f(angle1_i-1, angle2_i-1, ang_velocity1_i-1)
             curr.derivatives[2] = angular_acceleration1(g, L, L1, m, k, fi1, fi2, beta, angular_velocity1);
 
             // velocity_i = velocity_i-1 + 1.5 * h * acceleration_i-1 - 0.5 * h * acceleration_i-2
             // или для первого шага velocity_i = velocity_i-1 + h * acceleration_i-1
-            if (i != -1) {
+            if (i == 1) {
                 curr.derivatives[1] = angular_velocity1 + h * path1[path1.length - 1].derivatives[2];
             } else {
                 curr.derivatives[1] = angular_velocity1 + 1.5 * h * path1[path1.length - 1].derivatives[2] - 0.5 * h * path1[path1.length - 2].derivatives[2];
@@ -89,7 +81,7 @@
 
             // angle_i = angle_i-1 + 1.5 * h * velocity_i-1 - 0.5 * h * velocity_i-2
             // или для первого шага angle_i = angle_i-1 + h * velocity_i-1
-            if (i != -1) {
+            if (i == 1) {
                 curr.derivatives[0] = fi1 + h * path1[path1.length - 1].derivatives[1];
             } else {
                 curr.derivatives[0] = fi1 + 1.5 * h * path1[path1.length - 1].derivatives[1] - 0.5 * h * path1[path1.length - 2].derivatives[1];
@@ -99,13 +91,13 @@
 
 
             curr = new Derivatives([0.0, 0.0, 0.0]);
-            // acceleration = f(angle_i-1)
+            // acceleration = f(angle1_i-1, angle2_i-1, ang_velocity2_i-1)
             let angular_velocity2 = path2[path2.length - 1].derivatives[1];
             curr.derivatives[2] = angular_acceleration2(g, L, L1, m, k, fi1, fi2, beta, angular_velocity2);
 
             // velocity_i = velocity_i-1 + 1.5 * h * acceleration_i-1 - 0.5 * h * acceleration_i-2
             // или для первого шага velocity_i = velocity_i-1 + h * acceleration_i-1
-            if (i != -1) {
+            if (i == 1) {
                 curr.derivatives[1] = angular_velocity2 + h * path2[path2.length - 1].derivatives[2];
             } else {
                 curr.derivatives[1] = angular_velocity2 + 1.5 * h * path2[path2.length - 1].derivatives[2] - 0.5 * h * path2[path2.length - 2].derivatives[2];
@@ -113,7 +105,7 @@
 
             // angle_i = angle_i-1 + 1.5 * h * velocity_i-1 - 0.5 * h * velocity_i-2
             // или для первого шага angle_i = angle_i-1 + h * velocity_i-1
-            if (i != -1) {
+            if (i == 1) {
                 curr.derivatives[0] = fi2 + h * path2[path2.length - 1].derivatives[1];
             } else {
                 curr.derivatives[0] = fi2 + 1.5 * h * path2[path2.length - 1].derivatives[1] - 0.5 * h * path2[path2.length - 2].derivatives[1];
@@ -121,66 +113,11 @@
 
             path2.push(new Derivatives([curr.derivatives[0], curr.derivatives[1], curr.derivatives[2]]));
 
-            //console.log(path1);
-
             coords[0].push(i * h);
             coords[1].push(path1[path1.length - 1].derivatives[0]);
             coords[2].push(path2[path2.length - 1].derivatives[0]);
             coords[3].push(path1[path1.length - 1].derivatives[1]);
             coords[4].push(path2[path2.length - 1].derivatives[1]);
-        }
-        
-        return coords;
-    }
-
-    // function omega0_1(g, L)
-    // {
-    //     return Math.sqrt(g / L);
-    // }
-    //
-    // function omega0_2(g, L, L1, m, k)
-    // {
-    //     return Math.sqrt(g / L + (2 * k * L1 * L1) / (m * L * L));
-    // }
-    //
-    // function fi1(g, L, L1, m, k, fi0_1, fi0_2, beta, t)
-    // {
-    //     return 0.5 * Math.exp(-beta * t) * A1(fi0_1, fi0_2) * Math.cos(omega0_1(g, L) * t) + 0.5 * Math.exp(-beta * t) * A2(fi0_1, fi0_2) * Math.cos(omega0_2(g, L, L1, m, k) * t);
-    // }
-    //
-    // function fi2(g, L, L1, m, k, fi0_1, fi0_2, beta, t)
-    // {
-    //     return 0.5 * Math.exp(-beta * t) * A1(fi0_1, fi0_2) * Math.cos(omega0_1(g, L) * t) - 0.5 * Math.exp(-beta * t) * A2(fi0_1, fi0_2) * Math.cos(omega0_2(g, L, L1, m, k) * t);
-    // }
-    //
-    // function omega1(g, L, L1, m, k, fi0_1, fi0_2, beta, t)
-    // {
-    //     return 0.5 * (-beta) * Math.exp(-beta * t) * A1(fi0_1, fi0_2) * Math.cos(omega0_1(g, L) * t) +
-    //         0.5 * Math.exp(-beta * t) * A1(fi0_1, fi0_2) * Math.sin(omega0_1(g, L) * t) * (-1) * omega0_1(g, L) +
-    //         0.5 * (-beta) * Math.exp(-beta * t) * A2(fi0_1, fi0_2) * Math.cos(omega0_2(g, L, L1, m, k) * t) +
-    //         0.5 * Math.exp(-beta * t) * A2(fi0_1, fi0_2) * Math.sin(omega0_2(g, L, L1, m, k) * t) * (-1) * omega0_2(g, L, L1, m, k);
-    // }
-    //
-    // function omega2(g, L, L1, m, k, fi0_1, fi0_2, beta, t)
-    // {
-    //     return 0.5 * (-beta) * Math.exp(-beta * t) * A1(fi0_1, fi0_2) * Math.cos(omega0_1(g, L) * t) +
-    //         0.5 * Math.exp(-beta * t) * A1(fi0_1, fi0_2) * Math.sin(omega0_1(g, L) * t) * (-1) * omega0_1(g, L) -
-    //         0.5 * (-beta) * Math.exp(-beta * t) * A2(fi0_1, fi0_2) * Math.cos(omega0_2(g, L, L1, m, k) * t) -
-    //         0.5 * Math.exp(-beta * t) * A2(fi0_1, fi0_2) * Math.sin(omega0_2(g, L, L1, m, k) * t) * (-1) * omega0_2(g, L, L1, m, k);
-    // }
-
-    // возвращает список координат для построения графика
-    function getCoords(h, cnt, g, L, L1, m, k, fi0_1, fi0_2, beta)
-    {
-        let coords = [[], [], [], [], [], []]; // [[t1, ... t_cnt], [fi1(t1), ... fi1(t_cnt)], [f2(t1), ... f2(t_cnt)], [omega1(t1), ... omega1(t_cnt)], [omega2(t1), ... omega2(t_cnt)]]
-        for (let i = 0; i < cnt; i++)
-        {
-            let t = h * i; // текущее t
-            coords[0].push(t);
-            coords[1].push(fi1(g, L, L1, m, k, fi0_1, fi0_2, beta, t));
-            coords[2].push(fi2(g, L, L1, m, k, fi0_1, fi0_2, beta, t));
-            coords[3].push(omega1(g, L, L1, m, k, fi0_1, fi0_2, beta, t));
-            coords[4].push(omega2(g, L, L1, m, k, fi0_1, fi0_2, beta, t));
         }
         
         return coords;
@@ -194,10 +131,14 @@
         const L1 = parseFloat(document.getElementById("L1").value);
         const m = parseFloat(document.getElementById("m").value);
         const beta = parseFloat(document.getElementById("beta").value);
-        const fi0_1 = parseFloat(document.getElementById("fi0_1").value);
-        const fi0_2 = parseFloat(document.getElementById("fi0_2").value);
+        const fi0_1 = parseFloat(document.getElementById("fi0_1").value); // start angle1
+        const fi0_2 = parseFloat(document.getElementById("fi0_2").value); // start angle2
         const g = 9.8;
         let coords = generate_coords(h, cnt, g, L, L1, m, k, fi0_1, fi0_2, beta);
+
+        document.getElementById("Omega1").innerHTML = "Ω1 " + (Math.sqrt(g / L - (beta / 2) ** 2)).toString() + " рад/с";
+        document.getElementById("Omega2").innerHTML = "Ω2 " + (Math.sqrt(g / L + 2 * k * L1 * L1 / (m * L * L) - (beta / 2) ** 2)).toString() + " рад/с";
+
 
         // Define Data
         const fi1 = {
@@ -215,8 +156,7 @@
             type: "scatter",
             name: "ϕ2(t)",
             xaxis: "x",
-            yaxis: "y",
-            //yaxis: "I(t), А"
+            yaxis: "y"
         };
 
         const omega1 = {
@@ -226,8 +166,7 @@
             type: "scatter",
             name: "ω1(t)",
             xaxis: "x2",
-            yaxis: "y2",
-            //yaxis: "I(t), А"
+            yaxis: "y2"
         };
 
         const omega2 = {
@@ -237,13 +176,12 @@
             type: "scatter",
             name: "ω2(t)",
             xaxis: "x2",
-            yaxis: "y2",
-            //yaxis: "I(t), А"
+            yaxis: "y2"
         };
 
         // Define Layout
         const layout = {
-            grid: {rows: 2, columns: 2, pattern: 'independent'},
+            grid: {rows: 1, columns: 2, pattern: 'independent'},
             title: "",
             xaxis: {
                 title: {
@@ -253,7 +191,7 @@
             },
             yaxis: {
                 title: {
-                    text: "ϕ1(t)"
+                    text: "ϕ(t), рад"
                 },
                 exponentformat: 'e'
             },
@@ -263,33 +201,9 @@
                 },
                 exponentformat: 'e'
             },
-            yaxis4: {
-                title: {
-                    text: "ϕ2(t)"
-                },
-                exponentformat: 'e'
-            },
-            xaxis3: {
-                title: {
-                    text: "t, c"
-                },
-                exponentformat: 'e'
-            },
-            yaxis3: {
-                title: {
-                    text: "ω1(t)"
-                },
-                exponentformat: 'e'
-            },
-            xaxis4: {
-                title: {
-                    text: "t, c"
-                },
-                exponentformat: 'e'
-            },
             yaxis2: {
                 title: {
-                    text: "ω2(t)"
+                    text: "ω(t), рад/с"
                 },
                 exponentformat: 'e'
             }
